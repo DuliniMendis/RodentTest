@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<meta charset="utf-8">
+<style>
+
+body {
+  font: 10px sans-serif;
+
+}
+
+.chord path {
+  fill-opacity: .67;
+  stroke: #000;
+  stroke-width: .5px;
+}
+
+#tooltip{
+    visibility: hidden;
+    position: absolute;
+    background-color: dodgerblue;
+     border-radius: 4px;
+     padding: 5px;
+    z-index: 10;
+    color:white;
+    font-size:14px;
+}
+    
+
+</style>
+
+
+<body>  
+     <div id=tooltip></div>
+  <div style="color:#0000FF">
+    <a href="raster.html">
+    A raster plot of the network.
+    </a>
+  </div>
+<div style="color:#0000FF">
+
+<!--Offline  
+<script type="text/javascript" src="d3.v3.min.js"></script> 
+
+Online 
+-->
+<script src="//d3js.org/d3.v3.min.js"></script>
+<script>
+
+ var tooltip = d3.select("#tooltip");
+
+d3.json('js/global_whole_network.json', function(error, data){
+  if (error) throw error;
+
+
+var matrix=whole_net=data[2]; // adjacency matrix 37 x 37 of all excitatory and inhibitory neurons
+
+
+console.log((data.length));
+console.log('input matrix');
+console.log(matrix);
+    
+var neurons = Object.keys(data[7]).map(function(key){ return data[7][key] }); //object with filenames and whether its excitatory or inhibitory
+
+//Get excitatory and inhibitory neurons indices separately
+var neuronType = neurons.map(function(a) {return a[1];});
+var neuronInds = neuronType.map(function(a,i){ if(a==0 && i<matrix.length){ return i;} else return null; });
+var exNeuronInds = neuronInds.filter(function(a){return a!=null;});
+var neuronInds = neuronType.map(function(a,i){ if(a==1 && i<matrix.length){ return i;} else return null; });
+var inNeuronInds = neuronInds.filter(function(a){return a!=null;});
+var sortNeuronInds = inNeuronInds.concat(exNeuronInds);    
+    
+//Sort adjacency matrix
+var temp = [];   
+var vSortRow = [];
+var sortMat = [];
+for(i=0;i<sortNeuronInds.length;i++){        
+    temp = matrix[sortNeuronInds[i]];
+    vSortRow = [];
+    
+    for(j=0;j<sortNeuronInds.length;j++){
+        vSortRow.push(temp[sortNeuronInds[j]]);
+    }
+    
+    sortMat.push(vSortRow.map(function(a){return a;}));       
+}
+
+matrix=sortMat;
+    
+    
+var chord = d3.layout.chord()
+
+    .padding(.05)
+    .sortSubgroups(d3.descending)
+    .matrix(matrix);
+    //console.log('print the chord log follows')
+
+   
+    console.log(data[8]); //spike times [9] is neurons ids
+
+var width = 800,
+    height = 600,
+    innerRadius = Math.min(width, height) * .25,
+    outerRadius = innerRadius * 1.1;
+
+var fill = d3.scale.ordinal()
+    .domain(d3.range(4))
+    .range(["#3366ff","#55ff55","#000000"]);
+
+var svg = d3.select("body").append("svg")
+    .attr("width", width)
+    .attr("height", height)
+    .append("g")
+    .attr("transform", "translate(" + width / 2 + "," + height / 2 + ")");
+
+svg.append("g").selectAll("path")
+    .data(chord.groups)
+  .enter().append("path")   
+    .style("fill", function(d,i) { if(i<inNeuronInds.length) return fill(0); else return fill(1) })
+    .style("stroke", function(d,i) { if(i<inNeuronInds.length) return fill(0); else return fill(1) })
+    .attr("d", d3.svg.arc().innerRadius(innerRadius).outerRadius(outerRadius))
+    .on("mouseover",  fade(.1))
+    .on("mousemove", function(){
+            tooltip.style("top", (d3.event.pageY-10)+"px").style("left",(d3.event.pageX+10)+"px");
+        })
+    .on("mouseout", fade(1));
+    
+        
+
+var ticks = svg.append("g").selectAll("g")
+    .data(chord.groups)
+  .enter().append("g").selectAll("g")
+    .data(groupTicks)
+  .enter().append("g")
+    .attr("transform", function(d) {
+      return "rotate(" + (d.angle * 180 / Math.PI - 90) + ")"
+          + "translate(" + outerRadius + ",0)";
+    });
+
+ticks.append("line")
+    .attr("x1", 1)
+    .attr("y1", 0)
+    .attr("x2", 5)
+    .attr("y2", 0)
+    .style("stroke", "#000");
+
+ticks.append("text")
+    .attr("x", 8)
+    .attr("dy", ".35em")
+    .attr("transform", function(d) { return d.angle > Math.PI ? "rotate(180)translate(-16)" : null; })
+    .style("text-anchor", function(d) { return d.angle > Math.PI ? "end" : null; })
+    .text(function(d) { return d.label; });
+
+svg.append("g")
+    .attr("class", "chord")
+  .selectAll("path")
+    .data(chord.chords)
+  .enter().append("path")
+    .attr("d", d3.svg.chord().radius(innerRadius))
+    .style("fill", function(d) { 
+         if(d.target.index<inNeuronInds.length && d.source.index<inNeuronInds.length) return fill(0); 
+        else if(d.target.index>=inNeuronInds.length && d.source.index>=inNeuronInds.length) return fill(1);
+        else return fill(2);
+    })
+    .style("stroke", "none")
+
+    .style("opacity", 1);
+
+// Returns an array of tick angles and labels, given a group.
+function groupTicks(d) {
+  var k = (d.endAngle - d.startAngle) / d.value;
+  return d3.range(0, d.value, 1000).map(function(v, i) {
+    return {
+      angle: v * k + d.startAngle + (d.endAngle-d.startAngle)/2,
+      label: neurons[sortNeuronInds[d.index]][0]
+    };
+  });
+}
+
+// Returns an event handler for fading a given chord group.
+function fade(opacity) {
+  return function(g, i) {
+    svg.selectAll(".chord path")
+        .filter(function(d) { return d.source.index != i && d.target.index != i; })
+      .transition()
+        .style("opacity", opacity);
+      
+      if(tooltip.style("visibility")=="hidden")
+       tooltip.style("visibility", "visible").text(neurons[sortNeuronInds[i]]);
+      else
+       tooltip.style("visibility", "hidden");
+  };
+}
+});
+</script>
+</div>

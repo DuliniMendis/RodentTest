@@ -1,0 +1,73 @@
+<head>
+  <!-- Plotly.js -->
+  <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+  <script type="text/javascript" src="d3.v3.min.js"></script> 
+
+</head>
+
+<body>
+
+
+
+  <div id="myDiv" style="width: 900px; height: 900px;"></div>
+  <script>
+d3.json('js/global_whole_network.json', function(error, data){
+  if (error) throw error;
+var trace1 = {
+	x: data[9],
+	y: data[8],
+  //x: [1, 2, 3, 4, 5],
+  //y: [1, 6, 3, 6, 1],
+  mode: 'markers+text',
+  type: 'scatter',
+  name: 'Team A',
+  text:  [data[8]],
+  //['A-1', 'A-2', 'A-3', 'A-4', 'A-5'],
+  textposition: 'center',
+  textfont: {
+    family:  'Raleway, sans-serif'
+  },
+  marker: { size: 12 }
+};
+console.log(trace1.x)
+
+
+/*var trace2 = {
+  //x: [1.5, 2.5, 3.5, 4.5, 5.5],
+  //y: [4, 1, 7, 1, 4],
+  mode: 'markers+text',
+  type: 'scatter',
+  name: 'Team B',
+  text: ['B-a', 'B-b', 'B-c', 'B-d', 'B-e'],
+  textfont : {
+    family:'Times New Roman'
+  },
+  textposition: 'bottom center',
+  marker: { size: 12 }
+};*/
+
+var data = [ trace1];// , trace2 ];
+
+var layout = { 
+  xaxis: {
+    range: [ 0, 550 ] 
+  },
+  yaxis: {
+    range: [0, 40]
+  },
+  legend: {
+    y: 5,
+    yref: 'paper',
+    font: {
+      family: 'Arial, sans-serif',
+      size: 20,
+      color: 'grey',
+    }
+  },
+  title:'Data Labels on the Plot'
+};
+
+Plotly.newPlot('myDiv', data, layout);
+});
+  </script>
+</body>
