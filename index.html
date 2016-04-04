@@ -117,7 +117,7 @@ svg.append("g").selectAll("path")
     .style("fill", function(d,i) { if(i<inNeuronInds.length) return fill(0); else return fill(1) })
     .style("stroke", function(d,i) { if(i<inNeuronInds.length) return fill(0); else return fill(1) })
     .attr("d", d3.svg.arc().innerRadius(innerRadius).outerRadius(outerRadius))
-    .on("mouseover",  fade(.1))
+    .on("mouseover",  fade(.25))
     .on("mousemove", function(){
             tooltip.style("top", (d3.event.pageY-10)+"px").style("left",(d3.event.pageX+10)+"px");
         })
