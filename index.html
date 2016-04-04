@@ -53,25 +53,24 @@ d3.json('js/global_whole_network.json', function(error, data){
 
 var matrix=whole_net=data[2]; // adjacency matrix 37 x 37 of all excitatory and inhibitory neurons
 
-
-console.log((data.length));
-console.log('input matrix');
-console.log(matrix);
     
 var neurons = Object.keys(data[7]).map(function(key){ return data[7][key] }); //object with filenames and whether its excitatory or inhibitory
 
 //Get excitatory and inhibitory neurons indices separately
 var neuronType = neurons.map(function(a) {return a[1];});
 var neuronInds = neuronType.map(function(a,i){ if(a==0 && i<matrix.length){ return i;} else return null; });
-var exNeuronInds = neuronInds.filter(function(a){return a!=null;});
-var neuronInds = neuronType.map(function(a,i){ if(a==1 && i<matrix.length){ return i;} else return null; });
 var inNeuronInds = neuronInds.filter(function(a){return a!=null;});
-var sortNeuronInds = inNeuronInds.concat(exNeuronInds);    
+var neuronInds = neuronType.map(function(a,i){ if(a==1 && i<matrix.length){ return i;} else return null; });
+var exNeuronInds = neuronInds.filter(function(a){return a!=null;});
+var sortNeuronInds = exNeuronInds.concat(inNeuronInds);    
     
+
 //Sort adjacency matrix
 var temp = [];   
 var vSortRow = [];
 var sortMat = [];
+
+  
 for(i=0;i<sortNeuronInds.length;i++){        
     temp = matrix[sortNeuronInds[i]];
     vSortRow = [];
@@ -93,8 +92,6 @@ var chord = d3.layout.chord()
     .matrix(matrix);
     //console.log('print the chord log follows')
 
-   
-    console.log(data[8]); //spike times [9] is neurons ids
 
 var width = 800,
     height = 600,
@@ -103,7 +100,7 @@ var width = 800,
 
 var fill = d3.scale.ordinal()
     .domain(d3.range(4))
-    .range(["#3366ff","#55ff55","#000000"]);
+    .range(["#55ff55","#3366ff","#000000"]);
 
 var svg = d3.select("body").append("svg")
     .attr("width", width)
@@ -114,8 +111,8 @@ var svg = d3.select("body").append("svg")
 svg.append("g").selectAll("path")
     .data(chord.groups)
   .enter().append("path")   
-    .style("fill", function(d,i) { if(i<inNeuronInds.length) return fill(0); else return fill(1) })
-    .style("stroke", function(d,i) { if(i<inNeuronInds.length) return fill(0); else return fill(1) })
+    .style("fill", function(d,i) { if(i<exNeuronInds.length) return fill(0); else return fill(1) })
+    .style("stroke", function(d,i) { if(i<exNeuronInds.length) return fill(0); else return fill(1) })
     .attr("d", d3.svg.arc().innerRadius(innerRadius).outerRadius(outerRadius))
     .on("mouseover",  fade(.05))
     .on("mousemove", function(){
@@ -156,13 +153,13 @@ svg.append("g")
   .enter().append("path")
     .attr("d", d3.svg.chord().radius(innerRadius))
     .style("fill", function(d) { 
-         if(d.target.index<inNeuronInds.length && d.source.index<inNeuronInds.length) return fill(0); 
-        else if(d.target.index>=inNeuronInds.length && d.source.index>=inNeuronInds.length) return fill(1);
+         if(d.target.index<exNeuronInds.length && d.source.index<exNeuronInds.length) return fill(0); 
+        else if(d.target.index>=exNeuronInds.length && d.source.index>=exNeuronInds.length) return fill(1);
         else return fill(2);
     })
     .style("stroke", function(d) { 
-         if(d.target.index<inNeuronInds.length && d.source.index<inNeuronInds.length) return fill(0); 
-        else if(d.target.index>=inNeuronInds.length && d.source.index>=inNeuronInds.length) return fill(1);
+         if(d.target.index<exNeuronInds.length && d.source.index<exNeuronInds.length) return fill(0); 
+        else if(d.target.index>=exNeuronInds.length && d.source.index>=exNeuronInds.length) return fill(1);
         else return fill(2);
     })
     .style("opacity", 1);
