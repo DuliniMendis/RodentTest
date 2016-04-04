@@ -1,7 +1,7 @@
 <head>
   <!-- Plotly.js -->
   <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
-  <script type="text/javascript" src="d3.v3.min.js"></script> 
+ <script src="//d3js.org/d3.v3.min.js"></script>
 
 </head>
 
@@ -9,27 +9,50 @@
 
 
 
-  <div id="myDiv" style="width: 900px; height: 900px;"></div>
+  <div id="myDiv" style="width: 1000px; height: 700px;"></div>
   <script>
 d3.json('js/global_whole_network.json', function(error, data){
   if (error) throw error;
+    
+        
+var neurons = Object.keys(data[7]).map(function(key){ return data[7][key] }); //object with filenames and whether its excitatory or inhibitory
+
+//Get excitatory and inhibitory neurons indices separately
+var neuronType = neurons.map(function(a) {return a[1];});
+var neuronInds = neuronType.map(function(a,i){ if(a==0){ return i;} else return null; });
+var inNeuronInds = neuronInds.filter(function(a){return a!=null;});
+var neuronInds = neuronType.map(function(a,i){ if(a==1){ return i;} else return null; });
+var exNeuronInds = neuronInds.filter(function(a){return a!=null;});
+
+    console.log(inNeuronInds);
+    console.log(data[9]);
+
 var trace1 = {
-	x: data[9],
-	y: data[8],
-  //x: [1, 2, 3, 4, 5],
-  //y: [1, 6, 3, 6, 1],
-  mode: 'markers+text',
+	x: data[8].filter(function(d,i){return exNeuronInds.indexOf(data[9][i])>=0;}),
+	y: data[9].filter(function(d,i){return exNeuronInds.indexOf(d)>=0;}),
+
+  mode: 'markers',
   type: 'scatter',
-  name: 'Team A',
-  text:  [data[8]],
-  //['A-1', 'A-2', 'A-3', 'A-4', 'A-5'],
-  textposition: 'center',
-  textfont: {
-    family:  'Raleway, sans-serif'
-  },
-  marker: { size: 12 }
+  name: 'Excitatory', 
+  marker: { 
+      color: "#25BA2A",
+      size: 12 }
 };
-console.log(trace1.x)
+    
+    var trace2 = {
+	x: data[8].filter(function(d,i){return inNeuronInds.indexOf(data[9][i])>=0;}),
+	y: data[9].filter(function(d,i){return inNeuronInds.indexOf(d)>=0;}),
+
+  mode: 'markers',
+  type: 'scatter',
+  name: 'Inhibitory',
+  marker: { 
+      size: 12,
+      color: '#3366ff'      
+          }
+
+};
+console.log(trace2.x)
 
 
 /*var trace2 = {
@@ -46,7 +69,7 @@ console.log(trace1.x)
   marker: { size: 12 }
 };*/
 
-var data = [ trace1];// , trace2 ];
+var data = [trace1, trace2 ];
 
 var layout = { 
   xaxis: {
